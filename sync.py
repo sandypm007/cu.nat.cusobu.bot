@@ -55,11 +55,12 @@ def run_update(local_repo):
         client.loop.run_until_complete(send_message(client, 'Server >>> Restoring permissions'))
         os.system('cd {folder} && chmod -R 777 var/cache/'.format(folder=local_repo))
         client.loop.run_until_complete(send_message(client, 'Server >>> Done!! Go click the system!! ;)'))
-        client.loop.stop()
-        client.disconnect()
 
         with open(LAST_COMMIT_FILE, 'w') as file:
             file.write(remote_commit)
+
+        client.loop.stop()
+        client.disconnect()
     pass
 
 
