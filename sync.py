@@ -36,10 +36,12 @@ def run_update(local_repo):
     logger.debug('Started Telegram Client')
     client = TelegramClient('COVID', 1346594, 'ba0c3974d7210cfda36f23460a93935b')
     client.start()
+    client.loop.run_until_complete(send_message(client, 'Server >>> Attempt to sync project!'))
 
     remote_commit = str(r.head.commit)
     if remote_commit == last_commit:
-        print('Already up to date')
+        logger.debug('Already up to date')
+        client.loop.run_until_complete(send_message(client, 'Server >>> Already up to date!!!'))
     else:
         print('Will need to update', remote_commit, last_commit)
 
@@ -59,7 +61,7 @@ def run_update(local_repo):
         with open(LAST_COMMIT_FILE, 'w') as file:
             file.write(remote_commit)
 
-        client.loop.stop()
+    client.loop.stop()
     client.disconnect()
 
 
