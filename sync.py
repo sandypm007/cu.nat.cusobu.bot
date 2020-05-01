@@ -60,8 +60,7 @@ def run_update(local_repo):
             file.write(remote_commit)
 
         client.loop.stop()
-        client.disconnect()
-    pass
+    client.disconnect()
 
 
 async def send_message(client, message):
