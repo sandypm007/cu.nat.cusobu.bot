@@ -47,17 +47,17 @@ def run_update(local_repo):
         client.loop.run_until_complete(send_message(client, 'Server >>> Running db update'))
         os.system('cd {folder} && php bin/console doctrine:schema:update --force'.format(folder=local_repo))
         client.loop.run_until_complete(send_message(client, 'Server >>> Cleaning production cache'))
-        os.system('cd {folder} && php bin/console cache:clear --env=prod'.format(folder=local_repo))
+        os.system('cd {folder} && rm -rf var/cache/prod/*'.format(folder=local_repo))
         client.loop.run_until_complete(send_message(client, 'Server >>> Cleaning development cache'))
-        os.system('cd {folder} && php bin/console cache:clear --env=dev'.format(folder=local_repo))
+        os.system('cd {folder} && rm -rf var/cache/dev/*'.format(folder=local_repo))
         client.loop.run_until_complete(send_message(client, 'Server >>> Installing assets as symbolic links'))
         os.system('cd {folder} && php bin/console assets:install --symlink'.format(folder=local_repo))
         client.loop.run_until_complete(send_message(client, 'Server >>> Restoring permissions'))
         os.system('cd {folder} && chmod -R 777 var/cache/'.format(folder=local_repo))
         client.loop.run_until_complete(send_message(client, 'Server >>> Done!! Go click the system!! ;)'))
 
-        # with open(LAST_COMMIT_FILE, 'w') as file:
-        #     file.write(remote_commit)
+        with open(LAST_COMMIT_FILE, 'w') as file:
+            file.write(remote_commit)
     pass
 
 
