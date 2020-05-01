@@ -6,14 +6,15 @@ import fire
 import git
 from telethon import TelegramClient
 
+LAST_COMMIT_FILE = 'last_commit'
+DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + '/'
+
 logger = logging.getLogger('com.cusobucuba.local.sync')
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-fh = RotatingFileHandler('logs/sync.log', mode='a', maxBytes=5 * 1024 * 1024, backupCount=1, encoding=None, delay=0)
+fh = RotatingFileHandler(DIRECTORY + 'logs/sync.log', mode='a', maxBytes=5 * 1024 * 1024, backupCount=1, encoding=None, delay=0)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
-
-LAST_COMMIT_FILE = 'last_commit'
 
 
 class LeaveMissing(dict):
