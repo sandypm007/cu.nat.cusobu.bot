@@ -1,7 +1,7 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-
+import asyncio
 import fire
 import git
 from telethon import TelegramClient
