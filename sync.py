@@ -26,6 +26,7 @@ def run_update(local_repo):
         print("Both folders should exists")
 
     logger.debug('Started sync')
+    os.system('cd {folder} && git pull origin master'.format(folder=local_repo))
     r = git.Repo.init(local_repo)
     last_commit = None
     if os.path.isfile(LAST_COMMIT_FILE):
@@ -43,7 +44,6 @@ def run_update(local_repo):
         print('Will need to update', remote_commit, last_commit)
 
         client.loop.run_until_complete(send_message(client, 'Server >>> Starting sync, please leave server without work until further notice.'))
-        os.system('cd {folder} && git pull origin master'.format(folder=local_repo))
         client.loop.run_until_complete(send_message(client, 'Server >>> Running db update'))
         os.system('cd {folder} && php bin/console doctrine:schema:update --force'.format(folder=local_repo))
         client.loop.run_until_complete(send_message(client, 'Server >>> Cleaning production cache'))
