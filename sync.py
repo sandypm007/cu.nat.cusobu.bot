@@ -40,7 +40,7 @@ def run_update(local_repo):
     if remote_commit == last_commit:
         logger.debug('Already up to date')
     else:
-        logger.debug('Will need to update', remote_commit, last_commit)
+        logger.debug('Will need to update {0} -> {1}'.format(remote_commit, last_commit))
         logger.debug('Started Telegram Client')
         client = TelegramClient('COVID', 1346594, 'ba0c3974d7210cfda36f23460a93935b')
         client.start()
