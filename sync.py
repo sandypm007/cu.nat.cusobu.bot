@@ -1,7 +1,7 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-import asyncio
+
 import fire
 import git
 from telethon import TelegramClient
@@ -23,10 +23,10 @@ class LeaveMissing(dict):
 
 
 def run_update(local_repo):
-    if not os.path.exists(local_repo):
-        print("Both folders should exists")
-
     logger.debug('Started sync')
+    if not os.path.exists(local_repo):
+        logger.error("Both folders should exists")
+
     os.system('cd {folder} && git pull origin master'.format(folder=local_repo))
     r = git.Repo.init(local_repo)
     last_commit = None
@@ -34,17 +34,15 @@ def run_update(local_repo):
         with open(LAST_COMMIT_FILE, 'r') as file:
             last_commit = file.readline().strip()
 
-    logger.debug('Started Telegram Client')
-    client = TelegramClient('COVID', 1346594, 'ba0c3974d7210cfda36f23460a93935b')
-    client.start()
-    client.loop.run_until_complete(send_message(client, 'Server >>> Attempt to sync project!'))
-
     remote_commit = str(r.head.commit)
     if remote_commit == last_commit:
         logger.debug('Already up to date')
-        client.loop.run_until_complete(send_message(client, 'Server >>> Already up to date!!!'))
     else:
-        print('Will need to update', remote_commit, last_commit)
+        logger.debug('Will need to update', remote_commit, last_commit)
+        logger.debug('Started Telegram Client')
+        client = TelegramClient('COVID', 1346594, 'ba0c3974d7210cfda36f23460a93935b')
+        client.start()
+        client.loop.run_until_complete(send_message(client, 'Server >>> Attempt to sync project!'))
 
         client.loop.run_until_complete(send_message(client, 'Server >>> Starting sync, please leave server without work until further notice.'))
         client.loop.run_until_complete(send_message(client, 'Server >>> Running db update'))
@@ -62,8 +60,10 @@ def run_update(local_repo):
         with open(LAST_COMMIT_FILE, 'w') as file:
             file.write(remote_commit)
 
-    client.loop.stop()
-    client.disconnect()
+        try:
+            client.disconnect()
+        except Exception as ex:
+            logger.error("Disconnection error {0}".format(ex))
 
 
 async def send_message(client, message):
@@ -72,4 +72,7 @@ async def send_message(client, message):
 
 
 if __name__ == "__main__":
-    fire.Fire(run_update)
+    try:
+        fire.Fire(run_update)
+    except Exception as ex:
+        logger.error("Unhandled exception {0}".format(ex))
