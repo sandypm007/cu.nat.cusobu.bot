@@ -36,20 +36,20 @@ def sync(update, context):
     else:
         logger.debug('Will need to update {0} -> {1}'.format(remote_commit, last_commit))
         logger.debug('Started Telegram Client')
-        send_message(context, update.effective_chat.id, 'Server >>> Attempt to sync project!')
+        send_message(context, update.effective_chat.id, 'Attempt to sync project!')
 
-        send_message(context, update.effective_chat.id, 'Server >>> Starting sync, please leave server without work until further notice.')
-        send_message(context, update.effective_chat.id, 'Server >>> Running db update')
+        send_message(context, update.effective_chat.id, 'Starting sync, please leave server without work until further notice.')
+        send_message(context, update.effective_chat.id, 'Running db update')
         os.system('cd {folder} && php bin/console doctrine:schema:update --force'.format(folder=local_repo))
-        send_message(context, update.effective_chat.id, 'Server >>> Cleaning production cache')
+        send_message(context, update.effective_chat.id, 'Cleaning production cache')
         os.system('cd {folder} && rm -rf var/cache/prod/*'.format(folder=local_repo))
-        send_message(context, update.effective_chat.id, 'Server >>> Cleaning development cache')
+        send_message(context, update.effective_chat.id, 'Cleaning development cache')
         os.system('cd {folder} && rm -rf var/cache/dev/*'.format(folder=local_repo))
-        send_message(context, update.effective_chat.id, 'Server >>> Installing assets as symbolic links')
+        send_message(context, update.effective_chat.id, 'Installing assets as symbolic links')
         os.system('cd {folder} && php bin/console assets:install --symlink'.format(folder=local_repo))
-        send_message(context, update.effective_chat.id, 'Server >>> Restoring permissions')
+        send_message(context, update.effective_chat.id, 'Restoring permissions')
         os.system('cd {folder} && chmod -R 777 var/cache/'.format(folder=local_repo))
-        send_message(context, update.effective_chat.id, 'Server >>> Done!! Go click the system!! ;)')
+        send_message(context, update.effective_chat.id, 'Done!! Go click the system!! ;)')
 
         with open(LAST_COMMIT_FILE, 'w') as file:
             file.write(remote_commit)
