@@ -2,6 +2,7 @@
 
 import logging
 import os
+import subprocess
 from logging.handlers import RotatingFileHandler
 
 import git
@@ -26,7 +27,7 @@ local_repo = False
 
 def sync(update, context):
     logger.debug('Started sync')
-    os.system('cd {folder} && git pull origin master'.format(folder=local_repo))
+    run_command('cd {folder} && git pull origin master'.format(folder=local_repo))
     r = git.Repo.init(local_repo)
     last_commit = None
     if os.path.isfile(LAST_COMMIT_FILE):
@@ -39,22 +40,31 @@ def sync(update, context):
         send_message(context, update.effective_chat.id, 'Already up to date!!')
     else:
         logger.debug('Will need to update {0} -> {1}'.format(remote_commit, last_commit))
-        send_message(context, update.effective_chat.id, 'Attempt to sync project!')
         send_message(context, update.effective_chat.id, 'Starting sync, please leave server without work until further notice.')
-        send_message(context, update.effective_chat.id, 'Running db update')
-        os.system('cd {folder} && php bin/console doctrine:schema:update --force'.format(folder=local_repo))
+        sync_db(update, context)
         send_message(context, update.effective_chat.id, 'Cleaning production cache')
-        os.system('cd {folder} && rm -rf var/cache/prod/*'.format(folder=local_repo))
+        run_command('rm -rf {folder}/var/cache/prod/*'.format(folder=local_repo))
         send_message(context, update.effective_chat.id, 'Cleaning development cache')
-        os.system('cd {folder} && rm -rf var/cache/dev/*'.format(folder=local_repo))
+        run_command('rm -rf {folder}/var/cache/dev/*'.format(folder=local_repo))
         send_message(context, update.effective_chat.id, 'Installing assets as symbolic links')
-        os.system('cd {folder} && php bin/console assets:install --symlink'.format(folder=local_repo))
+        run_command('php {folder}/bin/console assets:install --symlink'.format(folder=local_repo))
         send_message(context, update.effective_chat.id, 'Restoring permissions')
-        os.system('cd {folder} && chmod -R 777 var/cache/'.format(folder=local_repo))
+        run_command('chmod -R 777 {folder}/var/cache/'.format(folder=local_repo))
         send_message(context, update.effective_chat.id, 'Done!! Go click the system!! ;)')
 
         with open(LAST_COMMIT_FILE, 'w') as file:
             file.write(remote_commit)
+
+
+def sync_db(update, context):
+    logger.debug('Started sync db')
+    send_message(context, update.effective_chat.id, 'Running db update')
+    response = run_command('php {folder}/bin/console doctrine:schema:update --force'.format(folder=local_repo))
+    send_message(context, update.effective_chat.id, response)
+
+
+def run_command(command):
+    return subprocess.run(command, shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
 
 def send_message(context, chat_id, text):
@@ -69,10 +79,9 @@ def start(update, context):
 def init(token):
     updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
-    start_handler = CommandHandler('start', start)
-    dispatcher.add_handler(start_handler)
-    start_handler = CommandHandler('sync', sync)
-    dispatcher.add_handler(start_handler)
+    dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('sync', sync))
+    dispatcher.add_handler(CommandHandler('syncdb', sync_db))
     logger.debug('Started Telegram Bot')
     updater.start_polling()
 
