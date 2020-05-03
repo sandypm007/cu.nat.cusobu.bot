@@ -3,18 +3,17 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
 
 import git
 from dotenv import load_dotenv
 from telegram.ext import CommandHandler
 from telegram.ext import Updater
 
-env_path = Path('.') / '.env'
-load_dotenv(dotenv_path=env_path)
-
 LAST_COMMIT_FILE = 'last_commit'
 DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + '/'
+
+env_path = DIRECTORY + '.env'
+load_dotenv(dotenv_path=env_path)
 
 logger = logging.getLogger('com.cusobucuba.local.sync')
 logger.setLevel(logging.DEBUG)
