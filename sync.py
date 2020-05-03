@@ -78,7 +78,11 @@ def init(token):
 
 
 if __name__ == "__main__":
-    local_repo = os.getenv("REPO")
-    if not os.path.exists(local_repo):
-        print("Folder should exists")
-    init(os.getenv("TOKEN"))
+    try:
+        a = 1 / 0
+        local_repo = os.getenv("REPO")
+        if not os.path.exists(local_repo):
+            print("Folder should exists")
+        init(os.getenv("TOKEN"))
+    except Exception as ex:
+        logger.debug(ex)
