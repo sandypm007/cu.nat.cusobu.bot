@@ -36,6 +36,7 @@ def sync(update, context):
     remote_commit = str(r.head.commit)
     if remote_commit == last_commit:
         logger.debug('Already up to date')
+        send_message(context, update.effective_chat.id, 'Already up to date!!')
     else:
         logger.debug('Will need to update {0} -> {1}'.format(remote_commit, last_commit))
         logger.debug('Started Telegram Client')
