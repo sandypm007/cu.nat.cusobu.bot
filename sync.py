@@ -27,7 +27,7 @@ local_repo = False
 
 def sync(update, context):
     logger.debug('Started sync')
-    send_message(context, update.effective_chat.id, 'On it, please wait.')
+    send_message(context, update.effective_chat.id, 'On it {name}, please wait.'.format(name=str(update.message.from_user.first_name)))
     run_command('cd {folder} && git pull origin master'.format(folder=local_repo))
     r = git.Repo.init(local_repo)
     last_commit = None
@@ -74,7 +74,7 @@ def send_message(context, chat_id, text):
 
 
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a OnData bot. I'm here to help!")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Hello {name}, i'm a OnData bot. I'm here to help!".format(name=str(update.message.from_user.first_name)))
 
 
 def init(token):
