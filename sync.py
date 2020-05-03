@@ -39,9 +39,7 @@ def sync(update, context):
         send_message(context, update.effective_chat.id, 'Already up to date!!')
     else:
         logger.debug('Will need to update {0} -> {1}'.format(remote_commit, last_commit))
-        logger.debug('Started Telegram Client')
         send_message(context, update.effective_chat.id, 'Attempt to sync project!')
-
         send_message(context, update.effective_chat.id, 'Starting sync, please leave server without work until further notice.')
         send_message(context, update.effective_chat.id, 'Running db update')
         os.system('cd {folder} && php bin/console doctrine:schema:update --force'.format(folder=local_repo))
@@ -60,6 +58,7 @@ def sync(update, context):
 
 
 def send_message(context, chat_id, text):
+    logger.debug(text)
     context.bot.send_message(chat_id=chat_id, text=text)
 
 
@@ -74,6 +73,7 @@ def init(token):
     dispatcher.add_handler(start_handler)
     start_handler = CommandHandler('sync', sync)
     dispatcher.add_handler(start_handler)
+    logger.debug('Started Telegram Bot')
     updater.start_polling()
 
 
@@ -84,4 +84,4 @@ if __name__ == "__main__":
             print("Folder should exists")
         init(os.getenv("TOKEN"))
     except Exception as ex:
-        logger.debug(ex)
+        logger.error(ex)
