@@ -6,7 +6,8 @@ from logging.handlers import RotatingFileHandler
 
 import fire
 import git
-from telethon import TelegramClient
+from telegram.ext import CommandHandler
+from telegram.ext import Updater
 
 LAST_COMMIT_FILE = 'last_commit'
 DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + '/'
@@ -17,18 +18,11 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 fh = RotatingFileHandler(DIRECTORY + 'logs/sync.log', mode='a', maxBytes=5 * 1024 * 1024, backupCount=1, encoding=None, delay=0)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
+local_repo = False
 
 
-class LeaveMissing(dict):
-    def __missing__(self, key):
-        return '{' + key + '}'
-
-
-def run_update(local_repo):
+def sync(update, context):
     logger.debug('Started sync')
-    if not os.path.exists(local_repo):
-        logger.error("Both folders should exists")
-
     os.system('cd {folder} && git pull origin master'.format(folder=local_repo))
     r = git.Repo.init(local_repo)
     last_commit = None
@@ -42,39 +36,49 @@ def run_update(local_repo):
     else:
         logger.debug('Will need to update {0} -> {1}'.format(remote_commit, last_commit))
         logger.debug('Started Telegram Client')
-        client = TelegramClient('COVID', 1346594, 'ba0c3974d7210cfda36f23460a93935b')
-        client.start()
-        client.loop.run_until_complete(send_message(client, 'Server >>> Attempt to sync project!'))
+        send_message(context, update.effective_chat.id, 'Server >>> Attempt to sync project!')
 
-        client.loop.run_until_complete(send_message(client, 'Server >>> Starting sync, please leave server without work until further notice.'))
-        client.loop.run_until_complete(send_message(client, 'Server >>> Running db update'))
+        send_message(context, update.effective_chat.id, 'Server >>> Starting sync, please leave server without work until further notice.')
+        send_message(context, update.effective_chat.id, 'Server >>> Running db update')
         os.system('cd {folder} && php bin/console doctrine:schema:update --force'.format(folder=local_repo))
-        client.loop.run_until_complete(send_message(client, 'Server >>> Cleaning production cache'))
+        send_message(context, update.effective_chat.id, 'Server >>> Cleaning production cache')
         os.system('cd {folder} && rm -rf var/cache/prod/*'.format(folder=local_repo))
-        client.loop.run_until_complete(send_message(client, 'Server >>> Cleaning development cache'))
+        send_message(context, update.effective_chat.id, 'Server >>> Cleaning development cache')
         os.system('cd {folder} && rm -rf var/cache/dev/*'.format(folder=local_repo))
-        client.loop.run_until_complete(send_message(client, 'Server >>> Installing assets as symbolic links'))
+        send_message(context, update.effective_chat.id, 'Server >>> Installing assets as symbolic links')
         os.system('cd {folder} && php bin/console assets:install --symlink'.format(folder=local_repo))
-        client.loop.run_until_complete(send_message(client, 'Server >>> Restoring permissions'))
+        send_message(context, update.effective_chat.id, 'Server >>> Restoring permissions')
         os.system('cd {folder} && chmod -R 777 var/cache/'.format(folder=local_repo))
-        client.loop.run_until_complete(send_message(client, 'Server >>> Done!! Go click the system!! ;)'))
+        send_message(context, update.effective_chat.id, 'Server >>> Done!! Go click the system!! ;)')
 
         with open(LAST_COMMIT_FILE, 'w') as file:
             file.write(remote_commit)
 
-        try:
-            client.disconnect()
-        except Exception as ex:
-            logger.error("Disconnection error {0}".format(ex))
+
+def send_message(context, chat_id, text):
+    context.bot.send_message(chat_id=chat_id, text=text)
 
 
-async def send_message(client, message):
-    entity = await client.get_input_entity('https://t.me/joinchat/KwCBW0yTMRVjbeU6jytUYg')
-    await client.send_message(entity=entity, message=message)
+def start(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a OnData bot. I'm here to help!")
+
+
+def init(local):
+    global local_repo
+    if not os.path.exists(local):
+        print("Folder should exists")
+    local_repo = local
+    updater = Updater(token='1158809155:AAGI91jBYs4G5vlzlRQgDSUIAKL0hQrdnYk', use_context=True)
+    dispatcher = updater.dispatcher
+    start_handler = CommandHandler('start', start)
+    dispatcher.add_handler(start_handler)
+    start_handler = CommandHandler('sync', sync)
+    dispatcher.add_handler(start_handler)
+    updater.start_polling()
 
 
 if __name__ == "__main__":
     try:
-        fire.Fire(run_update)
+        fire.Fire(init)
     except Exception as ex:
         logger.error("Unhandled exception {0}".format(ex))
