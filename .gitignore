@@ -2,3 +2,4 @@
 *.session
 *.log
 last_commit
+/.env

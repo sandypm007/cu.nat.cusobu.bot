@@ -3,11 +3,15 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
-import fire
 import git
+from dotenv import load_dotenv
 from telegram.ext import CommandHandler
 from telegram.ext import Updater
+
+env_path = Path('.') / '.env'
+load_dotenv(dotenv_path=env_path)
 
 LAST_COMMIT_FILE = 'last_commit'
 DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + '/'
@@ -63,12 +67,8 @@ def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a OnData bot. I'm here to help!")
 
 
-def init(local):
-    global local_repo
-    if not os.path.exists(local):
-        print("Folder should exists")
-    local_repo = local
-    updater = Updater(token='1158809155:AAGI91jBYs4G5vlzlRQgDSUIAKL0hQrdnYk', use_context=True)
+def init(token):
+    updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
     start_handler = CommandHandler('start', start)
     dispatcher.add_handler(start_handler)
@@ -78,7 +78,7 @@ def init(local):
 
 
 if __name__ == "__main__":
-    try:
-        fire.Fire(init)
-    except Exception as ex:
-        logger.error("Unhandled exception {0}".format(ex))
+    local_repo = os.getenv("REPO")
+    if not os.path.exists(local_repo):
+        print("Folder should exists")
+    init(os.getenv("TOKEN"))
