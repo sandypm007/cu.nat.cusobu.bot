@@ -27,6 +27,7 @@ local_repo = False
 
 def sync(update, context):
     logger.debug('Started sync')
+    send_message(context, update.effective_chat.id, 'On it, please wait.')
     run_command('cd {folder} && git pull origin master'.format(folder=local_repo))
     r = git.Repo.init(local_repo)
     last_commit = None
@@ -50,7 +51,7 @@ def sync(update, context):
         run_command('php {folder}/bin/console assets:install --symlink'.format(folder=local_repo))
         send_message(context, update.effective_chat.id, 'Restoring permissions')
         run_command('chmod -R 777 {folder}/var/cache/'.format(folder=local_repo))
-        send_message(context, update.effective_chat.id, 'Done!! Go click the system!! ;)')
+        send_message(context, update.effective_chat.id, 'Done!! Go click the system!! 🎉🎉🎉')
 
         with open(LAST_COMMIT_FILE, 'w') as file:
             file.write(remote_commit)
