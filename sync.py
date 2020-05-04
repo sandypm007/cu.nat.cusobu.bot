@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 from telegram.ext import CommandHandler
 from telegram.ext import Updater
 
-LAST_COMMIT_FILE = 'last_commit'
 DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + '/'
+LAST_COMMIT_FILE = DIRECTORY + 'last_commit'
 
 env_path = DIRECTORY + '.env'
 load_dotenv(dotenv_path=env_path)
@@ -73,6 +73,11 @@ def send_message(context, chat_id, text):
     context.bot.send_message(chat_id=chat_id, text=text)
 
 
+def reset(update, context):
+    os.remove(LAST_COMMIT_FILE)
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Ok it {name}, removed last commit log!".format(name=str(update.message.from_user.first_name)))
+
+
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Hello {name}, i'm a OnData bot. I'm here to help!".format(name=str(update.message.from_user.first_name)))
 
@@ -83,6 +88,7 @@ def init(token):
     dispatcher.add_handler(CommandHandler('start', start))
     dispatcher.add_handler(CommandHandler('sync', sync))
     dispatcher.add_handler(CommandHandler('syncdb', sync_db))
+    dispatcher.add_handler(CommandHandler('reset', reset))
     logger.debug('Started Telegram Bot')
     updater.start_polling()
 
