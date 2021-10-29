@@ -3,3 +3,9 @@
 *.log
 last_commit
 /.env
+/venv/
+geckodriver.log
+__pycache__/
+*.py[cod]
+*$py.class
+store.db

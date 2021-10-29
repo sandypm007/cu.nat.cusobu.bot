@@ -2,13 +2,17 @@
 
 import logging
 import os
+import sched
 import subprocess
+import time
 from logging.handlers import RotatingFileHandler
 
 import git
 from dotenv import load_dotenv
 from telegram.ext import CommandHandler
 from telegram.ext import Updater
+
+from bandec.bandec import Bandec
 
 DIRECTORY = os.path.dirname(os.path.realpath(__file__)) + '/'
 LAST_COMMIT_FILE = DIRECTORY + 'last_commit'
@@ -23,6 +27,12 @@ fh = RotatingFileHandler(DIRECTORY + 'logs/sync.log', mode='a', maxBytes=5 * 102
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 local_repo = False
+
+s = sched.scheduler(time.time, time.sleep)
+scheduled_event = None
+
+last_context = None
+last_chat_id = None
 
 
 def sync(update, context):
@@ -71,28 +81,55 @@ def run_command(command):
 
 
 def send_message(context, chat_id, text):
+    global last_chat_id
+    global last_context
+    logger.debug("Sending message to chat id: {chat}".format(chat=str(chat_id)))
     logger.debug(text)
+    last_context = context
+    last_chat_id = chat_id
     context.bot.send_message(chat_id=chat_id, text=text)
 
 
 def reset(update, context):
     os.remove(LAST_COMMIT_FILE)
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Ok it {name}, removed last commit log!".format(name=str(update.message.from_user.first_name)))
+    send_message(context, chat_id=update.effective_chat.id, text="Ok it {name}, removed last commit log!".format(name=str(update.message.from_user.first_name)))
 
 
-def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Hello {name}, i'm a OnData bot. I'm here to help!".format(name=str(update.message.from_user.first_name)))
+def hello(update, context):
+    send_message(context, chat_id=update.effective_chat.id, text="Hello {name}, i'm a CUSOBU's bot. I'm here to help!".format(name=str(update.message.from_user.first_name)))
+
+
+def check_accounts():
+    global last_chat_id
+    global last_context
+    if last_context and last_chat_id:
+        logger.debug('checking bank accounts')
+        notifications = Bandec(logger).run_check()
+        for entry in notifications:
+            send_message(last_context, chat_id=last_chat_id, text=entry.message())
+    else:
+        logger.debug('Unable to check accounts without context')
+    add_schedule()
+    pass
+
+
+def add_schedule():
+    global scheduled_event
+    logger.debug('Scheduled account check in 60 seconds')
+    scheduled_event = s.enter(60, 1, check_accounts)  # , kwargs={'a': 'configuration'})
+    s.run()
 
 
 def init(token):
     updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
-    dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('hello', hello))
     dispatcher.add_handler(CommandHandler('sync', sync))
     dispatcher.add_handler(CommandHandler('syncdb', sync_db))
     dispatcher.add_handler(CommandHandler('reset', reset))
     logger.debug('Started Telegram Bot')
     updater.start_polling()
+    add_schedule()
 
 
 if __name__ == "__main__":
