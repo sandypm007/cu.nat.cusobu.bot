@@ -122,8 +122,8 @@ def check_accounts():
 
 def add_schedule():
     global scheduled_event
-    logger.debug('Scheduled account check in 60 seconds')
-    scheduled_event = s.enter(60, 1, check_accounts)  # , kwargs={'a': 'configuration'})
+    logger.debug('Scheduled account check in 3600 seconds')
+    scheduled_event = s.enter(3600, 1, check_accounts)  # , kwargs={'a': 'configuration'})
     s.run()
 
 
