@@ -34,6 +34,10 @@ class Bandec:
         for entry in entries:
             self.__matrix.append(str(entry).split(','))
 
+    def accounts(self):
+        self.run_check()
+        return Accounts().all()
+
     def run_check(self):
         profile = webdriver.FirefoxProfile()
         profile.set_preference("permissions.default.image", 2)

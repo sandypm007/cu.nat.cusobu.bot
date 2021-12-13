@@ -7,8 +7,11 @@ class Handler:
         self.__cur = self.__con.cursor()
         self.__cur.execute('CREATE TABLE IF NOT EXISTS accounts (number text, credit real, available real)')
 
+    def select_all(self, sql, params):
+        self.__cur.execute(sql, params)
+        return self.__cur.fetchall()
+
     def select_one(self, sql, params):
-        # return self.__cur.execute("select * from accounts where number=:number", {"number": "000"})
         self.__cur.execute(sql, params)
         return self.__cur.fetchone()
 

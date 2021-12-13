@@ -92,11 +92,18 @@ def send_message(context, chat_id, text):
 
 def reset(update, context):
     os.remove(LAST_COMMIT_FILE)
-    send_message(context, chat_id=update.effective_chat.id, text="Ok it {name}, removed last commit log!".format(name=str(update.message.from_user.first_name)))
+    send_message(context, chat_id=update.effective_chat.id, text="Ok, {name}, removed last commit log!".format(name=str(update.message.from_user.first_name)))
 
 
 def hello(update, context):
     send_message(context, chat_id=update.effective_chat.id, text="Hello {name}, i'm a CUSOBU's bot. I'm here to help!".format(name=str(update.message.from_user.first_name)))
+
+
+def money_check(update, context):
+    send_message(context, chat_id=update.effective_chat.id, text="Ok, please let me check!")
+    accounts = Bandec(logger).accounts()
+    for entry in accounts:
+        send_message(context, chat_id=update.effective_chat.id, text="Account {number}: {available} - {credit}".format(number=str(entry[0]), available=str(entry[2]), credit=str(entry[1])))
 
 
 def check_accounts():
@@ -127,6 +134,7 @@ def init(token):
     dispatcher.add_handler(CommandHandler('sync', sync))
     dispatcher.add_handler(CommandHandler('syncdb', sync_db))
     dispatcher.add_handler(CommandHandler('reset', reset))
+    dispatcher.add_handler(CommandHandler('money', money_check))
     logger.debug('Started Telegram Bot')
     updater.start_polling()
     add_schedule()
