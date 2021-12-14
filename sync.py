@@ -149,6 +149,7 @@ def init(token):
     dispatcher.add_handler(CommandHandler('syncdb', sync_db))
     dispatcher.add_handler(CommandHandler('reset', reset))
     dispatcher.add_handler(CommandHandler('money', money_check))
+    dispatcher.add_handler(CommandHandler('pending', check_pending_payments))
     logger.debug('Started Telegram Bot')
     updater.start_polling()
     add_schedule()
