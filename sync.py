@@ -132,10 +132,11 @@ def check_pending_payments(update, context):
     result = response.json()
     if result['success']:
         total = 0
+        message = ""
         for entry in result['entries']:
-            send_message(context, chat_id=update.effective_chat.id, text="Invoice: {number} Pending: {pending} Currency: {currency}".format(number=entry['number'], pending=float(entry['price']) - float(entry['paid']), currency=entry['currency']))
+            message += "Invoice: {number} Pending: {pending} Currency: {currency}".format(number=entry['number'], pending=float(entry['price']) - float(entry['paid']), currency=entry['currency']) + "\n"
             total += float(entry['price']) - float(entry['paid'])
-        send_message(context, chat_id=update.effective_chat.id, text="Total Pending: {total}".format(total=total))
+        send_message(context, chat_id=update.effective_chat.id, text="{message}\nTotal Pending: {total}".format(message=message, total=total))
 
 
 def add_schedule():
