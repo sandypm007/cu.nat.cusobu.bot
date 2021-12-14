@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import logging
 import os
 import sched
@@ -8,7 +7,10 @@ import time
 from logging.handlers import RotatingFileHandler
 
 import git
+import requests
+from dotenv import dotenv_values
 from dotenv import load_dotenv
+from requests.auth import HTTPBasicAuth
 from telegram.ext import CommandHandler
 from telegram.ext import Updater
 
@@ -118,6 +120,18 @@ def check_accounts():
         logger.debug('Unable to check accounts without context')
     add_schedule()
     pass
+
+
+def check_pending_payments(update, context):
+    config = dotenv_values(".env")
+    username = config.get('cusobu_username')
+    password = config.get('cusobu_password')
+    logger.debug('Checking pending payments')
+    response = requests.get("{host}/api/payments-pending".format(host=config.get('cusobu_host')), auth=HTTPBasicAuth(username, password))
+    result = response.json()
+    if result['success']:
+        for entry in result['entries']:
+            send_message(context, chat_id=update.effective_chat.id, text="Invoice: {number} Pending: {pending} Currency: {currency}".format(number=entry['number'], pending=entry['price'] - entry['paid'], currency=entry['currency']))
 
 
 def add_schedule():
