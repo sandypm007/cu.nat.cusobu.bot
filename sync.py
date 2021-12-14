@@ -127,11 +127,15 @@ def check_pending_payments(update, context):
     username = config.get('cusobu_username')
     password = config.get('cusobu_password')
     logger.debug('Checking pending payments')
+    send_message(context, chat_id=update.effective_chat.id, text="Ok, please let me check!")
     response = requests.get("{host}/api/payments-pending".format(host=config.get('cusobu_host')), auth=HTTPBasicAuth(username, password))
     result = response.json()
     if result['success']:
+        total = 0
         for entry in result['entries']:
-            send_message(context, chat_id=update.effective_chat.id, text="Invoice: {number} Pending: {pending} Currency: {currency}".format(number=entry['number'], pending=entry['price'] - entry['paid'], currency=entry['currency']))
+            send_message(context, chat_id=update.effective_chat.id, text="Invoice: {number} Pending: {pending} Currency: {currency}".format(number=entry['number'], pending=float(entry['price']) - float(entry['paid']), currency=entry['currency']))
+            total += float(entry['price']) - float(entry['paid'])
+        send_message(context, chat_id=update.effective_chat.id, text="Total Pending: {total}".format(total=total))
 
 
 def add_schedule():
