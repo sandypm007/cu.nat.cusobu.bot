@@ -137,7 +137,7 @@ def check_pending_payments(update, context):
             pending = float(entry['price']) - float(entry['paid'])
             message += "{number} -> {pending} {currency}".format(number=entry['number'], pending="${:,.2f}".format(pending), currency=entry['currency']) + "\n"
             total += pending
-        send_message(context, chat_id=update.effective_chat.id, text="{message}\nTotal Pending: {total}".format(message=message, total=total))
+        send_message(context, chat_id=update.effective_chat.id, text="{message}\nTotal Pending: {total}".format(message=message, total="${:,.2f}".format(total)))
 
 
 def add_schedule():
