@@ -134,8 +134,9 @@ def check_pending_payments(update, context):
         total = 0
         message = ""
         for entry in result['entries']:
-            message += "Invoice: {number} Pending: {pending} Currency: {currency}".format(number=entry['number'], pending=float(entry['price']) - float(entry['paid']), currency=entry['currency']) + "\n"
-            total += float(entry['price']) - float(entry['paid'])
+            pending = float(entry['price']) - float(entry['paid'])
+            message += "{number} -> {pending} {currency}".format(number=entry['number'], pending="${:,.2f}".format(pending), currency=entry['currency']) + "\n"
+            total += pending
         send_message(context, chat_id=update.effective_chat.id, text="{message}\nTotal Pending: {total}".format(message=message, total=total))
 
 
